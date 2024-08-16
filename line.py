@@ -45,7 +45,7 @@ class Line:
         print(command)
 
         if command[0] == 'receive_order':
-            self.receive_order(string_to_list(command[2]))
+            self.receive_order(command[1], command[2], command[3]) # "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
         elif command[0] == 'receive_parts':
             self.receive_parts(string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
 
@@ -57,7 +57,6 @@ class Line:
             for i in range(NUM_PRODUCTS):
                 products_parts = string_to_list(file.readline())
                 necessary_parts.append(products_parts)
-                print(products_parts)
 
         return necessary_parts
 
@@ -89,7 +88,9 @@ class Line:
         order = ""
         for part_number, part_need in enumerate(parts_to_be_ordered):
             if part_need:
-                order += str(1) + ";"    
+                order += str(1) + ";"  
+            else:
+                order += str(0) + ';'  
      
         # remove ; at the end
         order = "send_parts" + "/" + self.line_id + "/" + order[:-1]
@@ -97,23 +98,53 @@ class Line:
         # send order
         self.client.publish("warehouse", order)
 
-    def receive_order(self, order):
+    def receive_order(self, line_index, product_index, order):
         
-        products = []
-        for i in range(NUM_PRODUCTS):
-            for part in self.products_necessary_parts[i]:
-                self.parts_buffer[part - 1] -= order[i] # potential break
-                if (self.parts_buffer - 1) <= 0:
-                    self.line_broke()
+        if line_index != self.line_id:
+            return
+        
+        print("line %d will try to make order\n\n")
+        
+        # products = []
+        # for i in range(NUM_PRODUCTS):
+        #     for part in self.products_necessary_parts[i]:
+        #         self.parts_buffer[part - 1] -= order[i] # potential break
+        #         if (self.parts_buffer - 1) <= 0:
+        #             self.line_broke()
     
-            products.append(order[i])
+        #     products.append(order[i])
 
-        message = 'receive_products' + list_to_string(products)
+        parts_decremented = [False] * 100
+
+        # basic kit
+        for i in range(43):
+            if (self.parts_buffer[i] - int(order)) <= 0:
+                self.line_broke()
+                return
+            parts_decremented[i] = True
+
+        # variable kit
+        for part in self.products_necessary_parts[int(product_index)]:
+            if (self.parts_buffer[part-1] - int(order)) <= 0:
+                self.line_broke()
+                return
+            parts_decremented[part-1] = True
+
+        message = 'receive_products' + '/' + product_index + '/' + self.line_id + "/" + order
         self.client.publish("product_stock", message)
+        
+        self.decrement_parts(parts_decremented, order)
+        print("order sent\n\n")
 
     def line_broke(self):
 
         print("line ", self.line_id, " broke: lack of part stock")
+
+    def decrement_parts(self, parts_decremented, order):
+
+        for part_number, part_decremented in enumerate(parts_decremented):
+            if part_decremented:
+                self.parts_buffer[part_number] -= int(order)
 
 def main(line_id):
 
@@ -125,7 +156,7 @@ def main(line_id):
         days += 1
         print("day", days)
         line.check_parts()
-        time.sleep(3)
+        time.sleep(10)
 
 if __name__ == '__main__':
     

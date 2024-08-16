@@ -4,7 +4,7 @@ import random
 from utils import list_to_string, string_to_list
 
 PARTS_THRESHOLD = 20
-NUM_PRODUCTS = 1
+NUM_PRODUCTS = 5
 
 class ProductStock:
 
@@ -42,7 +42,7 @@ class ProductStock:
         print(command)
 
         if command[0] == 'receive_products':
-            self.receive_products(string_to_list(command[1]))
+            self.receive_products(command[1], command[2], command[3])
     
     def check_products(self):
 
@@ -61,11 +61,10 @@ class ProductStock:
         # return false if lack of stock         
         return not product_to_be_ordered.count(1) > 0
 
-    def receive_products(self, products):
+    def receive_products(self, product_index, line_id, products):
 
-        print("factory received products from production lines")
-        for i in range(NUM_PRODUCTS):
-            self.products_buffer[i] += products[i]
+        print("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
+        self.products_buffer[int(product_index)] += int(products)
 
     def send_daily_order(self):
 
@@ -94,7 +93,7 @@ def main():
     while True:
 
         product_stock.send_daily_order()
-        time.sleep(1)
+        time.sleep(10)
 
 if __name__ == '__main__':
 

@@ -10,7 +10,7 @@ PARTS_TO_SEND_AMOUNT = 40
 class Warehouse:
 
     def __init__(self):
-        self.parts_buffer = [40] * 100
+        self.parts_buffer = [41] * 100
         self.client = self.broker_connection()
         self.waitingOrder = False
 
@@ -56,17 +56,31 @@ class Warehouse:
     def send_parts(self, line_id, parts_ordered):
         
         parts_to_send = [0] * 100
+        parts_index_sent = [False] * 100
         for part_number, part_need in enumerate(parts_ordered):
             if part_need:
+                if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT <= 0:
+                    # print("here\n\n",     parts_to_send[part_number] - PARTS_TO_SEND_AMOUNT)
+                    self.warehouse_broke()  
+                    return
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
-                self.decrement_part(part_number)
+                parts_index_sent[part_number] = True
         
         result = "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
         print("enviando \n\n\n", list_to_string(parts_to_send))
         self.client.publish("line", result)
 
-    def decrement_part(self, part_number):
-        self.parts_buffer[part_number] -= PARTS_TO_SEND_AMOUNT
+        self.decrement_parts(parts_index_sent)
+
+    def warehouse_broke(self):
+
+        print("warehouse is broke: lack of stock")
+
+    def decrement_parts(self, parts_index_sent):
+
+        for part_number, part_sent in enumerate(parts_index_sent):
+            if part_sent:
+                self.parts_buffer[part_number] -= PARTS_TO_SEND_AMOUNT
 
     def check_parts(self):
 
@@ -117,7 +131,7 @@ def main():
         days += 1
         print('day', days)
         warehouse.check_parts()
-        time.sleep(3)
+        time.sleep(10)
 
 if __name__ == '__main__':
     main()
