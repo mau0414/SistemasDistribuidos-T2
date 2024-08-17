@@ -3,7 +3,7 @@ import time
 import random
 from utils import list_to_string, string_to_list
 
-PARTS_THRESHOLD = 20
+THRESHOLD = 20
 NUM_PRODUCTS = 5
 
 class ProductStock:
@@ -46,20 +46,22 @@ class ProductStock:
     
     def check_products(self):
 
-        product_to_be_ordered = [0] * 5
         status = 'GREEN'
         for i, product_amount in enumerate(self.products_buffer):
-            if product_amount < PARTS_THRESHOLD:
+            if product_amount < THRESHOLD:
                 status = 'RED'
-                product_to_be_ordered[i] = 1
-            elif product_amount < PARTS_THRESHOLD * 2:
+            elif product_amount < THRESHOLD * 2:
                 status = 'YELLOW'
         
-        print('parts buffer on product stock:', self.products_buffer)
-        print('parts buffer status on product stock: %s' %(status))
+        print('products buffer on product stock:', self.products_buffer)
+        print('products buffer status on product stock: %s' %(status))
+    
+    def check_product(self, product_number, quantity):
+        product_available = True
+        if self.products_buffer[product_number] < quantity:
+            product_available = False
 
-        # return false if lack of stock         
-        return not product_to_be_ordered.count(1) > 0
+        return product_available
 
     def receive_products(self, product_index, line_id, products):
 
@@ -68,22 +70,25 @@ class ProductStock:
 
     def send_daily_order(self):
 
-        products_available = self.check_products()
-
-        if products_available:
-            # simulate orders and decrement stock
-            for i in range(NUM_PRODUCTS):
-                product_ordered_amount = random.randint(0, 40)
+        products_sent = [0] * NUM_PRODUCTS
+        for i in range(NUM_PRODUCTS):
+                
+            product_ordered_amount = random.randint(0, 40)
+            product_available = self.check_product(i, product_ordered_amount)
+            if not product_available:
+                print("order of product %d could not be done: lack of stock"  %(i + 1))
+                continue
+            else:
                 self.products_buffer[i] -= product_ordered_amount # potential break
                 print('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
+                products_sent[i] = product_ordered_amount
+            
+        self.update_factory()
+        self.check_products()
 
-            self.update_factory()
-        else:
-            print("order could not be done: lack of stock")
-    
     def update_factory(self):
 
-        message = "update_factory" + list_to_string(self.products_buffer)
+        message = "update_factory" + '/' +  list_to_string(self.products_buffer)
         self.client.publish("factory", message)
 
 def main():
