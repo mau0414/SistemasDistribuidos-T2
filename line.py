@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string
+from utils import string_to_list, list_to_string, print_update
 
 PARTS_THRESHOLD = 10
 NUM_PRODUCTS = 5
@@ -42,7 +42,7 @@ class Line:
         msg = str(message.payload.decode("utf-8"))
 
         command = msg.split("/")
-        print(command)
+        # print(command)
 
         if command[0] == 'receive_order':
             self.receive_order(command[1], command[2], command[3]) # "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
@@ -76,15 +76,17 @@ class Line:
             elif part_amount < PARTS_THRESHOLD * 2:
                 status = 'YELLOW'
         
-        print('parts buffer on line', self.line_id, ':', self.parts_buffer)
-        print('parts buffer status on line %s:%s' %(str(self.line_id), status))
+
+        # print('parts buffer on line', self.line_id, ':', self.parts_buffer)
+        msg = 'parts buffer status on line %s:%s and buffer = %s' %(str(self.line_id), status, str(self.parts_buffer))
+        print_update(msg)
 
         if parts_to_be_ordered.count(1) > 0:
             self.order_parts(parts_to_be_ordered)
             
     def order_parts(self, parts_to_be_ordered):
 
-        print("ordering parts in line %s" %(str(self.line_id)))
+        # print("ordering parts in line %s" %(str(self.line_id)))
         order = ""
         for part_number, part_need in enumerate(parts_to_be_ordered):
             if part_need:
@@ -102,17 +104,6 @@ class Line:
         
         if line_index != self.line_id:
             return
-        
-        print("line %d will try to make order\n\n")
-        
-        # products = []
-        # for i in range(NUM_PRODUCTS):
-        #     for part in self.products_necessary_parts[i]:
-        #         self.parts_buffer[part - 1] -= order[i] # potential break
-        #         if (self.parts_buffer - 1) <= 0:
-        #             self.line_broke()
-    
-        #     products.append(order[i])
 
         parts_decremented = [False] * 100
 
@@ -134,11 +125,15 @@ class Line:
         self.client.publish("product_stock", message)
         
         self.decrement_parts(parts_decremented, order)
-        print("order sent\n\n")
+        msg = "order of product " + str(int(product_index) + 1) + " sent"
+        # print("order sent\n\n")
+        print_update(msg)
 
     def line_broke(self):
 
-        print("line ", self.line_id, " broke: lack of part stock")
+        # print("line ", self.line_id, " broke: lack of part stock")
+        msg = ("line " + str(self.line_id) + " broke: lack of part stock").upper()
+        print_update(msg)
 
     def decrement_parts(self, parts_decremented, order):
 

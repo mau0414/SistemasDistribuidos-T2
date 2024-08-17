@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import sys
-from utils import list_to_string, string_to_list
+from utils import list_to_string, string_to_list, print_update
 
 BROKER_ADDRESS = 'localhost'
 
@@ -44,7 +44,8 @@ class Factory:
 
     def update_factory(self, product_buffer_on_stock):
         
-        print("factory is aware that product stock has amount = ", product_buffer_on_stock)
+        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock))
+        # print("factory is aware that product stock has amount = ", product_buffer_on_stock)
 
     def order_daily_batch(self, batch):
 
@@ -53,7 +54,8 @@ class Factory:
 
     def order_to_line(self, line_number, product_index, products_per_line):
 
-        print('ordering %d products to line %d' %(products_per_line, line_number))
+        print_update('ordering %d products to line %d' %(products_per_line, line_number))
+        # print('ordering %d products to line %d' %(products_per_line, line_number))
         message = "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
         self.client.publish('line', message)
 

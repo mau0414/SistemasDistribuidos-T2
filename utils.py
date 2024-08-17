@@ -14,3 +14,10 @@ def string_to_list(string):
         result[i] = int(item)
     
     return result
+
+def print_update(msg):
+
+    print('\n')
+    print('=================================================')
+    print(msg)
+    print('=================================================')
