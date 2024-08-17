@@ -105,7 +105,9 @@ class Warehouse:
         order = ""
         for part_number, part_need in enumerate(parts_to_be_ordered):
             if part_need:
-                order += str(1) + ";"    
+                order += str(1) + ";"  
+            else:
+                order += str(0) + ";"  
      
         # remove ; at the end
         order = "send_parts" + "/" + order[:-1]
