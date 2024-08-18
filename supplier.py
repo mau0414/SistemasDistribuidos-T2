@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string
+from utils import string_to_list, list_to_string, print_update
 
 PARTS_THRESHOLD = 10
 PARTS_TO_SEND_AMOUNT = 80
@@ -38,7 +38,7 @@ class Supplier:
         msg = str(message.payload.decode("utf-8"))
 
         command = msg.split("/")
-        print(command)
+        # print(command)
 
         if command[0] == 'send_parts':
             self.send_parts(string_to_list(command[1]))
@@ -51,7 +51,8 @@ class Supplier:
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
         
         result = "receive_parts" + "/" + list_to_string(parts_to_send) 
-        print("enviando \n\n\n", list_to_string(parts_to_send))
+        print_update("enviando: " + list_to_string(parts_to_send))
+        # print("enviando \n\n\n", list_to_string(parts_to_send))
         self.client.publish("warehouse", result)
 
 

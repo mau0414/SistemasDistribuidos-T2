@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import random
-from utils import list_to_string, string_to_list
+from utils import list_to_string, string_to_list, print_update
 
 THRESHOLD = 20
 NUM_PRODUCTS = 5
@@ -39,7 +39,7 @@ class ProductStock:
 
         command = msg.split("/")
 
-        print(command)
+        # print(command)
 
         if command[0] == 'receive_products':
             self.receive_products(command[1], command[2], command[3])
@@ -53,8 +53,10 @@ class ProductStock:
             elif product_amount < THRESHOLD * 2:
                 status = 'YELLOW'
         
-        print('products buffer on product stock:', self.products_buffer)
-        print('products buffer status on product stock: %s' %(status))
+        # print('products buffer on product stock:', self.products_buffer)
+        # print('products buffer status on product stock: %s and buffer = %s' %(status, str(self.products_buffer)))
+        msg = 'products buffer status on product stock: %s and buffer = %s' %(status, str(self.products_buffer))
+        print_update(msg)
     
     def check_product(self, product_number, quantity):
         product_available = True
@@ -65,7 +67,8 @@ class ProductStock:
 
     def receive_products(self, product_index, line_id, products):
 
-        print("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
+        # print("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
+        print_update("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
         self.products_buffer[int(product_index)] += int(products)
 
     def send_daily_order(self):
@@ -76,11 +79,13 @@ class ProductStock:
             product_ordered_amount = random.randint(0, 40)
             product_available = self.check_product(i, product_ordered_amount)
             if not product_available:
-                print("order of product %d could not be done: lack of stock"  %(i + 1))
+                # print("order of product %d could not be done: lack of stock"  %(i + 1))
+                print_update(("order of product %d could not be done: lack of stock"  %(i + 1)).upper())
                 continue
             else:
-                self.products_buffer[i] -= product_ordered_amount # potential break
-                print('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
+                self.products_buffer[i] -= product_ordered_amount 
+                # print('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
+                print_update('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
                 products_sent[i] = product_ordered_amount
             
         self.update_factory()

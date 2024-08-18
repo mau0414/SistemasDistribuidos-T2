@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import list_to_string, string_to_list
+from utils import list_to_string, string_to_list, print_update
 
 PARTS_THRESHOLD = 10
 BROKER_ADDRESS = 'localhost'
@@ -39,7 +39,7 @@ class Warehouse:
         msg = str(message.payload.decode("utf-8"))
 
         command = msg.split("/")
-        print(command)
+        # print(command)
 
         if command[0] == 'send_parts':
             self.send_parts(command[1], string_to_list(command[2]))
@@ -60,21 +60,22 @@ class Warehouse:
         for part_number, part_need in enumerate(parts_ordered):
             if part_need:
                 if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT <= 0:
-                    # print("here\n\n",     parts_to_send[part_number] - PARTS_TO_SEND_AMOUNT)
                     self.warehouse_broke()  
                     return
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
                 parts_index_sent[part_number] = True
         
         result = "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
-        print("enviando \n\n\n", list_to_string(parts_to_send))
+        # print("enviando \n\n\n", list_to_string(parts_to_send))
         self.client.publish("line", result)
 
         self.decrement_parts(parts_index_sent)
 
     def warehouse_broke(self):
 
-        print("warehouse is broke: lack of stock")
+        msg = ("warehouse is broke: lack of stock").upper()
+        print_update(msg)
+        # print("warehouse is broke: lack of stock")
 
     def decrement_parts(self, parts_index_sent):
 
@@ -93,15 +94,17 @@ class Warehouse:
             elif part_amount < PARTS_THRESHOLD * 2:
                 status = 'YELLOW'
         
-        print('parts buffer on warehouse:', self.parts_buffer)
-        print('parts buffer status on warehouse: %s' %(status))
+        # print('parts buffer on warehouse:', self.parts_buffer)
+        # print('parts buffer status on warehouse: %s and buffer = %s' %(status, str(self.parts_buffer)))
+        msg = 'parts buffer status on warehouse: %s and buffer = %s' %(status, str(self.parts_buffer))
+        print_update(msg)
 
         if parts_to_be_ordered.count(1) > 0 and self.waitingOrder == False:
             self.order_parts(parts_to_be_ordered)
     
     def order_parts(self, parts_to_be_ordered):
 
-        print("ordering parts in warehouse")
+        # print("ordering parts in warehouse")
         order = ""
         for part_number, part_need in enumerate(parts_to_be_ordered):
             if part_need:
