@@ -1,9 +1,9 @@
 import paho.mqtt.client as mqtt
 import time
 import random
-from utils import list_to_string, string_to_list, print_update
+from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, BATCH_SIZE, DAYS_MAX
 
-THRESHOLD = 20
+THRESHOLD = BATCH_SIZE
 NUM_PRODUCTS = 5
 
 class ProductStock:
@@ -101,12 +101,12 @@ def main():
 
     product_stock = ProductStock()
     days = 0
-    while days<=6:
+    while days <= DAYS_MAX:
 
         days += 1
         print_update("day " +str(days), "productstock")
         product_stock.send_daily_order()
-        time.sleep(10)
+        time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
 

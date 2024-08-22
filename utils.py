@@ -1,3 +1,8 @@
+TIME_SLEEP = 3
+BROKER_ADDRESS = 'localhost'
+BATCH_SIZE = 48
+DAYS_MAX = 10
+
 def list_to_string(list):
     result = ""
     for item in list:

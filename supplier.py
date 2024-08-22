@@ -1,10 +1,10 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string, print_update
+from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX
 
-PARTS_THRESHOLD = 10
-PARTS_TO_SEND_AMOUNT = 80
+BATCH_SIZE = 48
+PARTS_TO_SEND_AMOUNT = 2 * BATCH_SIZE
 
 class Supplier:
 
@@ -63,12 +63,12 @@ def main():
 
     days = 0
 
-    while days<=6:
+    while days <= DAYS_MAX:
 
         print_update('day ' + str(days), "supplier")
         days += 1
 
-        time.sleep(10)
+        time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
     main()

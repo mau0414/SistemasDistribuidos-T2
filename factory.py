@@ -1,9 +1,8 @@
 import paho.mqtt.client as mqtt
 import time
 import sys
-from utils import list_to_string, string_to_list, print_update
+from utils import list_to_string, string_to_list, print_update, BROKER_ADDRESS, TIME_SLEEP, DAYS_MAX
 
-BROKER_ADDRESS = 'localhost'
 
 class Factory:
 
@@ -64,14 +63,14 @@ def main(fabric_type, lines_number, batch_size):
 
     factory = Factory(fabric_type, lines_number, batch_size)
     days = 0
-    while days <=6:
+    while days <= DAYS_MAX:
         
         days += 1
         print_update('day '+str(days), 'factory' + '-' + fabric_type)
         product_batch = [48, 48, 48, 48, 48]
         # product_batch = [20, 20, 20, 20, 20]
         factory.order_daily_batch(product_batch)
-        time.sleep(10) # 1 segundo = 1 dia
+        time.sleep(TIME_SLEEP) # 1 segundo = 1 dia
 
 if __name__ == '__main__':
 

@@ -1,16 +1,17 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string, print_update
+from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX
 
-PARTS_THRESHOLD = 10
+BATCH_SIZE = 48
+PARTS_THRESHOLD = BATCH_SIZE * 3
 NUM_PRODUCTS = 5
 
 class Line:
 
     def __init__(self, line_id):
 
-        self.parts_buffer = [50] * 100
+        self.parts_buffer = [0] * 100
         self.line_id = line_id
         self.client = self.broker_connection()
         self.products_necessary_parts = self.read_products_necessary_parts()
@@ -147,12 +148,12 @@ def main(line_id):
     line = Line(line_id)
     days = 0
 
-    while days <= 6:
+    while days <= DAYS_MAX:
 
         days += 1
         print_update("day " + str(days), 'line' + str(line_id))
         line.check_parts()
-        time.sleep(10)
+        time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
     

@@ -1,11 +1,12 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import list_to_string, string_to_list, print_update
+from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, DAYS_MAX
 
-PARTS_THRESHOLD = 10
+BATCH_SIZE = 48
+PARTS_THRESHOLD = BATCH_SIZE * 3
+PARTS_TO_SEND_AMOUNT = 2 * BATCH_SIZE
 BROKER_ADDRESS = 'localhost'
-PARTS_TO_SEND_AMOUNT = 40
 
 class Warehouse:
 
@@ -40,16 +41,19 @@ class Warehouse:
         msg = str(message.payload.decode("utf-8"))
 
         command = msg.split("/")
-        # print(command)
+        print(command)
 
         if command[0] == 'send_parts':
             self.send_parts(command[1], string_to_list(command[2]))
         elif command[0] == 'receive_parts':
+            print("chegou aqu")
             self.receive_parts(string_to_list(command[1]))
             
     def receive_parts(self, parts_received):
     
+        print('parts received', parts_received)
         for i, _ in enumerate(self.parts_buffer):
+            # print('aqui', i)
             self.parts_buffer[i] += parts_received[i]
 
         self.waitingOrder = False
@@ -60,7 +64,7 @@ class Warehouse:
         parts_index_sent = [False] * 100
         for part_number, part_need in enumerate(parts_ordered):
             if part_need:
-                if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT <= 0:
+                if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT <= 0: # erro aqui 
                     self.warehouse_broke()  
                     return
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
@@ -132,12 +136,12 @@ def main():
     warehouse = Warehouse()
     days = 0
 
-    while days<=6:
+    while days <= DAYS_MAX:
 
         days += 1
         print_update('day '+str(days), "warehouse")
         warehouse.check_parts()
-        time.sleep(10)
+        time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
     main()
