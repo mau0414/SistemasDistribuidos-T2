@@ -10,9 +10,10 @@ PARTS_TO_SEND_AMOUNT = 40
 class Warehouse:
 
     def __init__(self):
-        self.parts_buffer = [41] * 100
+        self.parts_buffer = [0] * 100
         self.client = self.broker_connection()
         self.waitingOrder = False
+        self.entity_name = 'warehouse'
 
     def broker_connection(self):
 
@@ -74,7 +75,7 @@ class Warehouse:
     def warehouse_broke(self):
 
         msg = ("warehouse is broke: lack of stock").upper()
-        print_update(msg)
+        print_update(msg, self.entity_name)
         # print("warehouse is broke: lack of stock")
 
     def decrement_parts(self, parts_index_sent):
@@ -97,7 +98,7 @@ class Warehouse:
         # print('parts buffer on warehouse:', self.parts_buffer)
         # print('parts buffer status on warehouse: %s and buffer = %s' %(status, str(self.parts_buffer)))
         msg = 'parts buffer status on warehouse: %s and buffer = %s' %(status, str(self.parts_buffer))
-        print_update(msg)
+        print_update(msg, self.entity_name)
 
         if parts_to_be_ordered.count(1) > 0 and self.waitingOrder == False:
             self.order_parts(parts_to_be_ordered)
@@ -131,10 +132,10 @@ def main():
     warehouse = Warehouse()
     days = 0
 
-    while True:
+    while days<=6:
 
         days += 1
-        print('day', days)
+        print_update('day '+str(days), "warehouse")
         warehouse.check_parts()
         time.sleep(10)
 

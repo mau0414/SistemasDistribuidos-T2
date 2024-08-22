@@ -15,9 +15,14 @@ def string_to_list(string):
     
     return result
 
-def print_update(msg):
+def print_update(msg, entity_name):
 
-    print('\n')
-    print('===============================================================================')
+    final_msg = '\n'
+    final_msg += '===============================================================================\n'
+    final_msg += msg + '\n'
+    final_msg += '===============================================================================\n' 
+
     print(msg)
-    print('===============================================================================')
+
+    with open('output/' + entity_name + '.txt', 'a') as file:
+        file.write(final_msg)

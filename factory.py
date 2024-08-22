@@ -12,6 +12,7 @@ class Factory:
         self.lines_number = lines_number
         self.batch_size   = batch_size
         self.client = self.broker_connection()
+        self.entity_name = 'factory' + '-' + fabric_type
 
     def broker_connection(self):
         # Configura o cliente MQTT
@@ -44,7 +45,7 @@ class Factory:
 
     def update_factory(self, product_buffer_on_stock):
         
-        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock))
+        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock), self.entity_name)
         # print("factory is aware that product stock has amount = ", product_buffer_on_stock)
 
     def order_daily_batch(self, batch):
@@ -54,7 +55,7 @@ class Factory:
 
     def order_to_line(self, line_number, product_index, products_per_line):
 
-        print_update('ordering %d products to line %d' %(products_per_line, line_number))
+        print_update('ordering %d products to line %d' %(products_per_line, line_number), self.entity_name)
         # print('ordering %d products to line %d' %(products_per_line, line_number))
         message = "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
         self.client.publish('line', message)
@@ -63,12 +64,12 @@ def main(fabric_type, lines_number, batch_size):
 
     factory = Factory(fabric_type, lines_number, batch_size)
     days = 0
-    while True:
+    while days <=6:
         
         days += 1
-        print('day:', days)
-        # product_batch = [48, 48, 48, 48, 48]
-        product_batch = [20, 20, 20, 20, 20]
+        print_update('day '+str(days), 'factory' + '-' + fabric_type)
+        product_batch = [48, 48, 48, 48, 48]
+        # product_batch = [20, 20, 20, 20, 20]
         factory.order_daily_batch(product_batch)
         time.sleep(10) # 1 segundo = 1 dia
 

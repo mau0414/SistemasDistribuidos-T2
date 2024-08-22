@@ -10,10 +10,11 @@ class Line:
 
     def __init__(self, line_id):
 
-        self.parts_buffer = [1] * 100
+        self.parts_buffer = [50] * 100
         self.line_id = line_id
         self.client = self.broker_connection()
         self.products_necessary_parts = self.read_products_necessary_parts()
+        self.entity_name = 'line' + line_id
 
     def broker_connection(self):
 
@@ -79,7 +80,7 @@ class Line:
 
         # print('parts buffer on line', self.line_id, ':', self.parts_buffer)
         msg = 'parts buffer status on line %s:%s and buffer = %s' %(str(self.line_id), status, str(self.parts_buffer))
-        print_update(msg)
+        print_update(msg, self.entity_name)
 
         if parts_to_be_ordered.count(1) > 0:
             self.order_parts(parts_to_be_ordered)
@@ -127,13 +128,13 @@ class Line:
         self.decrement_parts(parts_decremented, order)
         msg = "order of product " + str(int(product_index) + 1) + " sent"
         # print("order sent\n\n")
-        print_update(msg)
+        print_update(msg, self.entity_name)
 
     def line_broke(self):
 
         # print("line ", self.line_id, " broke: lack of part stock")
         msg = ("line " + str(self.line_id) + " broke: lack of part stock").upper()
-        print_update(msg)
+        print_update(msg, self.entity_name)
 
     def decrement_parts(self, parts_decremented, order):
 
@@ -146,10 +147,10 @@ def main(line_id):
     line = Line(line_id)
     days = 0
 
-    while True:
+    while days <= 6:
 
         days += 1
-        print("day", days)
+        print_update("day " + str(days), 'line' + str(line_id))
         line.check_parts()
         time.sleep(10)
 

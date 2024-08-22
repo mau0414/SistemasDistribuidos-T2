@@ -11,6 +11,7 @@ class Supplier:
     def __init__(self):
         self.client = self.broker_connection()
         self.waitingOrder = False
+        self.entity_name = 'supplier'
 
     def broker_connection(self):
 
@@ -51,7 +52,7 @@ class Supplier:
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
         
         result = "receive_parts" + "/" + list_to_string(parts_to_send) 
-        print_update("enviando: " + list_to_string(parts_to_send))
+        print_update("enviando: " + list_to_string(parts_to_send), self.entity_name)
         # print("enviando \n\n\n", list_to_string(parts_to_send))
         self.client.publish("warehouse", result)
 
@@ -60,7 +61,12 @@ def main():
 
     line = Supplier()
 
-    while True:
+    days = 0
+
+    while days<=6:
+
+        print_update('day ' + str(days), "supplier")
+        days += 1
 
         time.sleep(10)
 

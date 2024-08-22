@@ -11,6 +11,7 @@ class ProductStock:
     def __init__(self):
         self.client = self.broker_connection()
         self.products_buffer = [0] * NUM_PRODUCTS
+        self.entity_name = 'productstock'
 
     def broker_connection(self):
 
@@ -56,7 +57,7 @@ class ProductStock:
         # print('products buffer on product stock:', self.products_buffer)
         # print('products buffer status on product stock: %s and buffer = %s' %(status, str(self.products_buffer)))
         msg = 'products buffer status on product stock: %s and buffer = %s' %(status, str(self.products_buffer))
-        print_update(msg)
+        print_update(msg, self.entity_name)
     
     def check_product(self, product_number, quantity):
         product_available = True
@@ -68,7 +69,7 @@ class ProductStock:
     def receive_products(self, product_index, line_id, products):
 
         # print("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
-        print_update("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
+        print_update("factory received %s products of version %s from production line %s" %(products, product_index, line_id), self.entity_name)
         self.products_buffer[int(product_index)] += int(products)
 
     def send_daily_order(self):
@@ -80,12 +81,12 @@ class ProductStock:
             product_available = self.check_product(i, product_ordered_amount)
             if not product_available:
                 # print("order of product %d could not be done: lack of stock"  %(i + 1))
-                print_update(("order of product %d could not be done: lack of stock"  %(i + 1)).upper())
+                print_update(("order of product %d could not be done: lack of stock"  %(i + 1)).upper(), self.entity_name)
                 continue
             else:
                 self.products_buffer[i] -= product_ordered_amount 
                 # print('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
-                print_update('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)))
+                print_update('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)), self.entity_name)
                 products_sent[i] = product_ordered_amount
             
         self.update_factory()
@@ -99,9 +100,11 @@ class ProductStock:
 def main():
 
     product_stock = ProductStock()
-    
-    while True:
+    days = 0
+    while days<=6:
 
+        days += 1
+        print_update("day " +str(days), "productstock")
         product_stock.send_daily_order()
         time.sleep(10)
 
