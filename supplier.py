@@ -1,10 +1,9 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX
+from utils import string_to_list, list_to_string, print_update, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, PARTS_TO_SEND_AMOUNT_SUPPLIER
 
-BATCH_SIZE = 48
-PARTS_TO_SEND_AMOUNT = 2 * BATCH_SIZE
+# PARTS_TO_SEND_AMOUNT_SUPPLIER = 12 * BATCH_SIZE
 
 class Supplier:
 
@@ -44,12 +43,13 @@ class Supplier:
         if command[0] == 'send_parts':
             self.send_parts(string_to_list(command[1]))
 
+    # parts_ordered: bool vector[100]
     def send_parts(self, parts_ordered):
         
         parts_to_send = [0] * 100
         for part_number, part_need in enumerate(parts_ordered):
             if part_need:
-                parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
+                parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT_SUPPLIER
         
         result = "receive_parts" + "/" + list_to_string(parts_to_send) 
         print_update("enviando: " + list_to_string(parts_to_send), self.entity_name)

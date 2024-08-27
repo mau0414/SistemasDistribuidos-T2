@@ -1,12 +1,12 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, DAYS_MAX
+from utils import list_to_string, string_to_list, print_update, BROKER_ADDRESS, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, YELLOW_ALERT_WAREHOUSE, RED_ALERT_WAREHOUSE, PARTS_TO_SEND_AMOUNT_WAREHOUSE
 
-BATCH_SIZE = 48
-PARTS_THRESHOLD = BATCH_SIZE * 3
-PARTS_TO_SEND_AMOUNT = 2 * BATCH_SIZE
-BROKER_ADDRESS = 'localhost'
+# BATCH_SIZE = 48
+# PARTS_THRESHOLD = BATCH_SIZE * 3
+# PARTS_TO_SEND_AMOUNT_WAREHOUSE = 4 * BATCH_SIZE
+# BROKER_ADDRESS = 'localhost'
 
 class Warehouse:
 
@@ -46,14 +46,11 @@ class Warehouse:
         if command[0] == 'send_parts':
             self.send_parts(command[1], string_to_list(command[2]))
         elif command[0] == 'receive_parts':
-            print("chegou aqu")
             self.receive_parts(string_to_list(command[1]))
             
     def receive_parts(self, parts_received):
     
-        print('parts received', parts_received)
         for i, _ in enumerate(self.parts_buffer):
-            # print('aqui', i)
             self.parts_buffer[i] += parts_received[i]
 
         self.waitingOrder = False
@@ -64,10 +61,10 @@ class Warehouse:
         parts_index_sent = [False] * 100
         for part_number, part_need in enumerate(parts_ordered):
             if part_need:
-                if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT <= 0: # erro aqui 
+                if self.parts_buffer[part_number] - PARTS_TO_SEND_AMOUNT_WAREHOUSE < 0: # erro aqui 
                     self.warehouse_broke()  
                     return
-                parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT
+                parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT_WAREHOUSE
                 parts_index_sent[part_number] = True
         
         result = "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
@@ -86,17 +83,17 @@ class Warehouse:
 
         for part_number, part_sent in enumerate(parts_index_sent):
             if part_sent:
-                self.parts_buffer[part_number] -= PARTS_TO_SEND_AMOUNT
+                self.parts_buffer[part_number] -= PARTS_TO_SEND_AMOUNT_WAREHOUSE
 
     def check_parts(self):
 
         parts_to_be_ordered = [0] * 100
         status = 'GREEN'
         for i, part_amount in enumerate(self.parts_buffer):
-            if part_amount < PARTS_THRESHOLD:
+            if part_amount < RED_ALERT_WAREHOUSE:
                 status = 'RED'
                 parts_to_be_ordered[i] = 1
-            elif part_amount < PARTS_THRESHOLD * 2:
+            elif part_amount < YELLOW_ALERT_WAREHOUSE:
                 status = 'YELLOW'
         
         # print('parts buffer on warehouse:', self.parts_buffer)

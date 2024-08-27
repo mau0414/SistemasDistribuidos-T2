@@ -1,10 +1,10 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX
+from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX, BATCH_SIZE, YELLOW_ALERT_LINE, RED_ALERT_LINE
 
-BATCH_SIZE = 48
-PARTS_THRESHOLD = BATCH_SIZE * 3
+# BATCH_SIZE = 48
+# PARTS_THRESHOLD = BATCH_SIZE * 3
 NUM_PRODUCTS = 5
 
 class Line:
@@ -16,6 +16,7 @@ class Line:
         self.client = self.broker_connection()
         self.products_necessary_parts = self.read_products_necessary_parts()
         self.entity_name = 'line' + line_id
+        self.waitingOrder = False
 
     def broker_connection(self):
 
@@ -49,7 +50,7 @@ class Line:
         if command[0] == 'receive_order':
             self.receive_order(command[1], command[2], command[3]) # "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
         elif command[0] == 'receive_parts':
-            self.receive_parts(string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
+            self.receive_parts(command[1], string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
 
     def read_products_necessary_parts(self):
         
@@ -62,20 +63,26 @@ class Line:
 
         return necessary_parts
 
-    def receive_parts(self, parts_received):
+    def receive_parts(self, line_id, parts_received):
+
+        if self.line_id != line_id:
+            return
 
         for i, _ in enumerate(self.parts_buffer):
             self.parts_buffer[i] += parts_received[i]
+
+        self.waitingOrder = False
+        print_update("received parts! updated parts buffer " + str(self.parts_buffer), self.entity_name)
 
     def check_parts(self):
 
         parts_to_be_ordered = [0] * 100
         status = 'GREEN'
         for i, part_amount in enumerate(self.parts_buffer):
-            if part_amount < PARTS_THRESHOLD:
+            if part_amount < RED_ALERT_LINE:
                 status = 'RED'
                 parts_to_be_ordered[i] = 1
-            elif part_amount < PARTS_THRESHOLD * 2:
+            elif part_amount < YELLOW_ALERT_LINE:
                 status = 'YELLOW'
         
 
@@ -83,7 +90,8 @@ class Line:
         msg = 'parts buffer status on line %s:%s and buffer = %s' %(str(self.line_id), status, str(self.parts_buffer))
         print_update(msg, self.entity_name)
 
-        if parts_to_be_ordered.count(1) > 0:
+        if parts_to_be_ordered.count(1) > 0 and self.waitingOrder == False:
+            print('ENTROU AQUI UMA VEZZZ')
             self.order_parts(parts_to_be_ordered)
             
     def order_parts(self, parts_to_be_ordered):
@@ -101,6 +109,7 @@ class Line:
 
         # send order
         self.client.publish("warehouse", order)
+        self.waitingOrder = True
 
     def receive_order(self, line_index, product_index, order):
         
@@ -118,7 +127,7 @@ class Line:
 
         # variable kit
         for part in self.products_necessary_parts[int(product_index)]:
-            if (self.parts_buffer[part-1] - int(order)) <= 0:
+            if (self.parts_buffer[part-1] - int(order)) < 0:
                 self.line_broke()
                 return
             parts_decremented[part-1] = True
@@ -130,6 +139,8 @@ class Line:
         msg = "order of product " + str(int(product_index) + 1) + " sent"
         # print("order sent\n\n")
         print_update(msg, self.entity_name)
+        print_update("updated parts buffer " + str(self.parts_buffer), self.entity_name)
+
 
     def line_broke(self):
 
