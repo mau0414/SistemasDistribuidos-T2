@@ -9,13 +9,14 @@ NUM_PRODUCTS = 5
 
 class Line:
 
-    def __init__(self, line_id):
+    def __init__(self, line_id, factory_id):
 
         self.parts_buffer = [0] * 100
         self.line_id = line_id
+        self.factory_id = factory_id
         self.client = self.broker_connection()
         self.products_necessary_parts = self.read_products_necessary_parts()
-        self.entity_name = 'line' + line_id
+        self.entity_name = 'line' + line_id + "-" + factory_id
         self.waitingOrder = False
 
     def broker_connection(self):
@@ -48,9 +49,9 @@ class Line:
         # print(command)
 
         if command[0] == 'receive_order':
-            self.receive_order(command[1], command[2], command[3]) # "receive_order" + '/' + '%d/%d/%d' %(line_number, product_index, products_per_line)
+            self.receive_order(command[1], command[2], command[3], command[4]) # "receive_order" + '/' + '%d/%d/%d/%d' %(line_number, factory_id, product_index, products_per_line)
         elif command[0] == 'receive_parts':
-            self.receive_parts(command[1], string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
+            self.receive_parts(command[1], command[2], string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + factory_id + "/" + list_to_string(parts_to_send) 
 
     def read_products_necessary_parts(self):
         
@@ -63,9 +64,9 @@ class Line:
 
         return necessary_parts
 
-    def receive_parts(self, line_id, parts_received):
+    def receive_parts(self, line_id, factory_id, parts_received):
 
-        if self.line_id != line_id:
+        if self.line_id != line_id or self.factory_id != factory_id:
             return
 
         for i, _ in enumerate(self.parts_buffer):
@@ -91,7 +92,6 @@ class Line:
         print_update(msg, self.entity_name)
 
         if parts_to_be_ordered.count(1) > 0 and self.waitingOrder == False:
-            print('ENTROU AQUI UMA VEZZZ')
             self.order_parts(parts_to_be_ordered)
             
     def order_parts(self, parts_to_be_ordered):
@@ -105,15 +105,15 @@ class Line:
                 order += str(0) + ';'  
      
         # remove ; at the end
-        order = "send_parts" + "/" + self.line_id + "/" + order[:-1]
+        order = "send_parts" + "/" + self.line_id + "/" + self.factory_id + "/" + order[:-1]
 
         # send order
         self.client.publish("warehouse", order)
         self.waitingOrder = True
 
-    def receive_order(self, line_index, product_index, order):
+    def receive_order(self, line_index, factory_id, product_index, order):
         
-        if line_index != self.line_id:
+        if line_index != self.line_id or factory_id != self.factory_id:
             return
 
         parts_decremented = [False] * 100
@@ -154,19 +154,20 @@ class Line:
             if part_decremented:
                 self.parts_buffer[part_number] -= int(order)
 
-def main(line_id):
+def main(line_id, factory_id):
 
-    line = Line(line_id)
+    line = Line(line_id, factory_id)
     days = 0
 
     while days <= DAYS_MAX:
 
         days += 1
-        print_update("day " + str(days), 'line' + str(line_id))
+        print_update("day " + str(days), 'line' + line_id + "-" + factory_id)
         line.check_parts()
         time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
     
     line_id = sys.argv[1]
-    main(line_id)
+    factory_id = sys.argv[2]
+    main(line_id, factory_id)

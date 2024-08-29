@@ -77,7 +77,7 @@ class ProductStock:
         products_sent = [0] * NUM_PRODUCTS
         for i in range(NUM_PRODUCTS):
                 
-            product_ordered_amount = random.randint(0, 40)
+            product_ordered_amount = random.randint(50, 150)
             product_available = self.check_product(i, product_ordered_amount)
             if not product_available:
                 # print("order of product %d could not be done: lack of stock"  %(i + 1))
