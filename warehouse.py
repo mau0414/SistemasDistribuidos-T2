@@ -44,7 +44,7 @@ class Warehouse:
         print(command)
 
         if command[0] == 'send_parts':
-            self.send_parts(command[1], string_to_list(command[2]))
+            self.send_parts(command[1], command[2], string_to_list(command[3]))
         elif command[0] == 'receive_parts':
             self.receive_parts(string_to_list(command[1]))
             
@@ -55,7 +55,7 @@ class Warehouse:
 
         self.waitingOrder = False
 
-    def send_parts(self, line_id, parts_ordered):
+    def send_parts(self, line_id, factory_id, parts_ordered):
         
         parts_to_send = [0] * 100
         parts_index_sent = [False] * 100
@@ -67,7 +67,7 @@ class Warehouse:
                 parts_to_send[part_number] = PARTS_TO_SEND_AMOUNT_WAREHOUSE
                 parts_index_sent[part_number] = True
         
-        result = "receive_parts" + "/" + line_id + "/" + list_to_string(parts_to_send) 
+        result = "receive_parts" + "/" + line_id + "/" + factory_id + "/" + list_to_string(parts_to_send) 
         # print("enviando \n\n\n", list_to_string(parts_to_send))
         self.client.publish("line", result)
 

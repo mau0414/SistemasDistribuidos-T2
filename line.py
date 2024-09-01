@@ -51,7 +51,7 @@ class Line:
         if command[0] == 'receive_order':
             self.receive_order(command[1], command[2], command[3], command[4]) # "receive_order" + '/' + '%d/%d/%d/%d' %(line_number, factory_id, product_index, products_per_line)
         elif command[0] == 'receive_parts':
-            self.receive_parts(command[1], command[2], string_to_list(command[2])) # "receive_parts" + "/" + line_id + "/" + factory_id + "/" + list_to_string(parts_to_send) 
+            self.receive_parts(command[1], command[2], string_to_list(command[3])) # "receive_parts" + "/" + line_id + "/" + factory_id + "/" + list_to_string(parts_to_send) 
 
     def read_products_necessary_parts(self):
         
@@ -65,7 +65,8 @@ class Line:
         return necessary_parts
 
     def receive_parts(self, line_id, factory_id, parts_received):
-
+        
+        print('line_id', line_id, 'factory_id' ,factory_id)
         if self.line_id != line_id or self.factory_id != factory_id:
             return
 
