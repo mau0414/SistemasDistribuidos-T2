@@ -43,7 +43,7 @@ class ProductStock:
         # print(command)
 
         if command[0] == 'receive_products':
-            self.receive_products(command[1], command[2], command[3])
+            self.receive_products(command[1], command[2], command[3], command[4]) # product_index, line_id, factory_id, products
     
     def check_products(self):
 
@@ -66,10 +66,10 @@ class ProductStock:
 
         return product_available
 
-    def receive_products(self, product_index, line_id, products):
+    def receive_products(self, product_index, line_id, factory_id, products):
 
         # print("factory received %s products of version %s from production line %s" %(products, product_index, line_id))
-        print_update("factory received %s products of version %s from production line %s" %(products, product_index, line_id), self.entity_name)
+        print_update("factory received %s products of version %s from production line %s of factory %s" %(products, product_index, line_id, factory_id), self.entity_name)
         self.products_buffer[int(product_index)] += int(products)
 
     def send_daily_order(self):

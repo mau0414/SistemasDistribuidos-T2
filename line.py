@@ -133,7 +133,8 @@ class Line:
                 return
             parts_decremented[part-1] = True
 
-        message = 'receive_products' + '/' + product_index + '/' + self.line_id + "/" + order
+        # product_index, line_id, factory_id, products
+        message = 'receive_products' + '/' + product_index + '/' + self.line_id + "/" + self.factory_id + "/" + order
         self.client.publish("product_stock", message)
         
         self.decrement_parts(parts_decremented, order)
