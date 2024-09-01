@@ -47,13 +47,13 @@ class Factory:
 
     def update_factory(self, product_buffer_on_stock):
         
-        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock), self.entity_name)
+        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock) + " and sum = " + str(sum(product_buffer_on_stock)), self.entity_name)
 
         products_most_needed = [0] * (self.lines_number - PRODUCTS_N)
 
-        if sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK:
+        if sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK * self.lines_number:
             self.last_stock_status = "red"
-        elif sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK * 2:
+        elif sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK * self.lines_number * 2 :
             self.last_stock_status = "yellow"
         else:
             self.last_stock_status = "green"
@@ -61,15 +61,18 @@ class Factory:
         for i in range(self.lines_number - PRODUCTS_N):
             lowest_quantity = None
             lowest_quantity_index = -1
-            for quantitiy, j in enumerate(product_buffer_on_stock):
-                if lowest_quantity == None or quantitiy < lowest_quantity:
+            for j, quantitiy in enumerate(product_buffer_on_stock):
+                if quantitiy != "checked" and (lowest_quantity == None or quantitiy < lowest_quantity):
                     lowest_quantity = quantitiy
                     lowest_quantity_index = j
             
-            products_most_needed.append(lowest_quantity_index)
+            # print("trying to remove ", lowest_quantity_index)
+            product_buffer_on_stock[lowest_quantity_index] = "checked"
+            products_most_needed[i] = lowest_quantity_index
 
         self.products_most_needed = products_most_needed
-
+        print('debug here', self.products_most_needed)
+    
     def order_daily_batch(self):
 
         if self.fabric_type == 'empurrada':
