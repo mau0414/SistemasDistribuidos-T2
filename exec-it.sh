@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 # Diretório alvo
 DIRECTORY="output"
 
