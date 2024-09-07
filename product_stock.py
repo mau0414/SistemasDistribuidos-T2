@@ -1,7 +1,8 @@
 import paho.mqtt.client as mqtt
 import time
 import random
-from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, BATCH_SIZE, DAYS_MAX, RED_ALERT_PRODUCT_STOCK, MIN_ORDERED_AMOUNT, MAX_ORDERED_AMOUNT
+from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, BATCH_SIZE, DAYS_MAX, RED_ALERT_PRODUCT_STOCK, MIN_ORDERED_AMOUNT, MAX_ORDERED_AMOUNT, FACTORY_N, broker_connection
+import os
 
 THRESHOLD = BATCH_SIZE
 NUM_PRODUCTS = 5
@@ -9,34 +10,13 @@ NUM_PRODUCTS = 5
 class ProductStock:
 
     def __init__(self):
-        self.client = self.broker_connection()
+        _, self.client = broker_connection("product_stock", self.on_message)
         self.products_buffer = [0] * NUM_PRODUCTS
         self.entity_name = 'productstock'
 
-    def broker_connection(self):
+    def on_message(self, ch, method, properties, message):
 
-        # Configura o cliente MQTT
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.on_message = self.on_message
-
-        # Conecta ao broker MQTT (substitua com o endereço do seu broker)
-        broker_address="localhost"
-        client.connect(broker_address)
-
-        # Mantém o cliente rodando
-        client.loop_start()
-
-        return client
-
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            print("client connected.")
-            client.subscribe("product_stock")
-
-    def on_message(self, client, userdata, message):
-
-        msg = str(message.payload.decode("utf-8"))
+        msg = message.decode()
 
         command = msg.split("/")
 
@@ -95,7 +75,8 @@ class ProductStock:
     def update_factory(self):
 
         message = "update_factory" + '/' +  list_to_string(self.products_buffer)
-        self.client.publish("factory", message)
+        for i in range(FACTORY_N):
+            self.client.basic_publish(exchange='', routing_key='factory-' + str(i) , body=message)
 
 def main():
 
@@ -109,6 +90,13 @@ def main():
         time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
+
+    time.sleep(3)
+
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
 
     main()
 

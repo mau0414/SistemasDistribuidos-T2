@@ -1,10 +1,9 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX, BATCH_SIZE, YELLOW_ALERT_LINE, RED_ALERT_LINE
+from utils import string_to_list, list_to_string, print_update, TIME_SLEEP, DAYS_MAX, BATCH_SIZE, YELLOW_ALERT_LINE, RED_ALERT_LINE, broker_connection
+import os
 
-# BATCH_SIZE = 48
-# PARTS_THRESHOLD = BATCH_SIZE * 3
 NUM_PRODUCTS = 5
 
 class Line:
@@ -14,37 +13,15 @@ class Line:
         self.parts_buffer = [0] * 100
         self.line_id = line_id
         self.factory_id = factory_id
-        self.client = self.broker_connection()
+        _, self.client = broker_connection("line-" + line_id + "-" + factory_id, self.on_message)
         self.products_necessary_parts = self.read_products_necessary_parts()
         self.entity_name = 'line' + line_id + "-" + factory_id
         self.waitingOrder = False
 
-    def broker_connection(self):
+    def on_message(self, ch, method, properties, message):
 
-        # configurate MQTT client
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.on_message = self.on_message
-
-        # conect to broker
-        broker_address="localhost"
-        client.connect(broker_address)
-
-        # keep client running
-        client.loop_start()
-
-        return client
-    
-    def on_connect(self, client, userdata, flags, rc):
-
-        if rc == 0:
-            print("client connected.")
-            client.subscribe("line")
-
-    def on_message(self, client, userdata, message):
-
-        msg = str(message.payload.decode("utf-8"))
-
+        msg = message.decode()
+        print(msg)
         command = msg.split("/")
         # print(command)
 
@@ -109,7 +86,9 @@ class Line:
         order = "send_parts" + "/" + self.line_id + "/" + self.factory_id + "/" + order[:-1]
 
         # send order
-        self.client.publish("warehouse", order)
+        # print("chegou aqui")
+        self.client.basic_publish(exchange='', routing_key='warehouse', body=order)
+        # print("aqui nao")
         self.waitingOrder = True
 
     def receive_order(self, line_index, factory_id, product_index, order):
@@ -135,7 +114,7 @@ class Line:
 
         # product_index, line_id, factory_id, products
         message = 'receive_products' + '/' + product_index + '/' + self.line_id + "/" + self.factory_id + "/" + order
-        self.client.publish("product_stock", message)
+        self.client.basic_publish(exchange='', routing_key='product_stock', body=message)
         
         self.decrement_parts(parts_decremented, order)
         msg = "order of product " + str(int(product_index) + 1) + " sent"
@@ -169,6 +148,13 @@ def main(line_id, factory_id):
         time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
+
+    time.sleep(3)
+
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
     
     line_id = sys.argv[1]
     factory_id = sys.argv[2]

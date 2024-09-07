@@ -1,8 +1,8 @@
 import paho.mqtt.client as mqtt
 import time
 import sys
-from utils import list_to_string, string_to_list, print_update, BROKER_ADDRESS, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, RED_ALERT_PRODUCT_STOCK, PRODUCTS_N
-
+from utils import list_to_string, string_to_list, print_update, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, RED_ALERT_PRODUCT_STOCK, PRODUCTS_N, broker_connection
+import os
 
 class Factory:
 
@@ -11,52 +11,38 @@ class Factory:
         self.factory_id = factory_id
         self.lines_number = lines_number
         self.batch_size   = batch_size
-        self.client = self.broker_connection()
         self.entity_name = 'factory' + '-' + fabric_type
         self.last_stock_status = None
         self.products_most_needed = []
+        _, self.client = broker_connection("factory-" + factory_id, self.on_message)
 
-    def broker_connection(self):
-        # Configura o cliente MQTT
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.on_message = self.on_message
+    def on_message(self, ch, method, properties, message):
 
-        # Conecta ao broker MQTT (substitua com o endereço do seu broker)
-        client.connect(BROKER_ADDRESS)
-
-
-        # Mantém o cliente rodando
-        client.loop_start()
-
-        return client
-    
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            print("client connected.")
-            client.subscribe("factory")
-
-    def on_message(self, client, userdata, message):
-
-        msg = str(message.payload.decode("utf-8"))
+        msg = message.decode()
 
         command = msg.split("/")
 
         if command[0] == 'update_factory':
             self.update_factory(string_to_list(command[1]))
 
-    def update_factory(self, product_buffer_on_stock):
+    def check_status(self, product_buffer_on_stock):
         
-        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock) + " and sum = " + str(sum(product_buffer_on_stock)), self.entity_name)
+        status = 'green'
+        for amount in product_buffer_on_stock:
+            if amount <= RED_ALERT_PRODUCT_STOCK:
+                return 'red'
+            elif amount <= RED_ALERT_PRODUCT_STOCK * 2:
+                status = 'yellow'
+
+        return status
+
+    def update_factory(self, product_buffer_on_stock):
 
         products_most_needed = [0] * (self.lines_number - PRODUCTS_N)
 
-        if sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK * self.lines_number:
-            self.last_stock_status = "red"
-        elif sum(product_buffer_on_stock) <= RED_ALERT_PRODUCT_STOCK * self.lines_number * 2 :
-            self.last_stock_status = "yellow"
-        else:
-            self.last_stock_status = "green"
+        self.last_stock_status = self.check_status(product_buffer_on_stock)
+
+        print_update("factory is aware that product stock has amount = " + str(product_buffer_on_stock) + " and status = " + self.last_stock_status, self.entity_name)
 
         for i in range(self.lines_number - PRODUCTS_N):
             lowest_quantity = None
@@ -71,7 +57,6 @@ class Factory:
             products_most_needed[i] = lowest_quantity_index
 
         self.products_most_needed = products_most_needed
-        print('debug here', self.products_most_needed)
     
     def order_daily_batch(self):
 
@@ -106,7 +91,7 @@ class Factory:
         print_update('ordering %d products %d to line %d' %(products_per_line, product_index, line_number), self.entity_name)
         # print('ordering %d products to line %d' %(products_per_line, line_number))
         message = "receive_order" + '/' + '%d/%d/%d/%d' %(line_number, int(factory_id) , product_index, products_per_line)
-        self.client.publish('line', message)
+        self.client.basic_publish(exchange='', routing_key='line-' + str(line_number) + "-" + str(factory_id), body=message)
 
 def main(fabric_type, factory_id, lines_number, batch_size):
 
@@ -121,6 +106,13 @@ def main(fabric_type, factory_id, lines_number, batch_size):
         time.sleep(TIME_SLEEP) # 1 segundo = 1 dia
 
 if __name__ == '__main__':
+
+    time.sleep(3)
+
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
 
     fabric_type  = sys.argv[1]
     if fabric_type != "puxada" and fabric_type != "empurrada":

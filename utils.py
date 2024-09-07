@@ -1,5 +1,5 @@
-TIME_SLEEP = 5
-BROKER_ADDRESS = 'localhost'
+import pika
+import threading
 
 '''
 
@@ -20,6 +20,8 @@ yellow is the double of red in each case
 
 '''
 
+TIME_SLEEP = 3
+BROKER_ADDRESS = 'localhost'
 BATCH_SIZE = 48
 YELLOW_ALERT_LINE = BATCH_SIZE * 6
 YELLOW_ALERT_WAREHOUSE = BATCH_SIZE * 780
@@ -27,9 +29,10 @@ RED_ALERT_LINE = BATCH_SIZE * 3
 RED_ALERT_WAREHOUSE = BATCH_SIZE * 390 
 RED_ALERT_PRODUCT_STOCK = 500
 PRODUCTS_N = 5
+FACTORY_N = 2
 PARTS_TO_SEND_AMOUNT_SUPPLIER = BATCH_SIZE * 1950
 PARTS_TO_SEND_AMOUNT_WAREHOUSE = BATCH_SIZE * 30
-DAYS_MAX = 20
+DAYS_MAX = 13
 MIN_ORDERED_AMOUNT = 50
 MAX_ORDERED_AMOUNT = 250
 
@@ -61,3 +64,24 @@ def print_update(msg, entity_name):
 
     with open('output/' + entity_name + '.txt', 'a') as file:
         file.write(final_msg)
+
+def create_conn():
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=BROKER_ADDRESS))
+    channel = connection.channel()
+
+    return channel
+
+# rabbitmq is not thread safe so create one connection per thread
+def broker_connection(topic, callback):
+
+    sub_channel = create_conn()
+    pub_channel = create_conn()
+
+    sub_channel.queue_declare(queue=topic)
+    sub_channel.basic_consume(queue=topic, on_message_callback=callback, auto_ack=True)
+
+    print(topic + " connected.")
+    threading.Thread(target=sub_channel.start_consuming).start()
+
+    return sub_channel, pub_channel

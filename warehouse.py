@@ -1,7 +1,8 @@
 import paho.mqtt.client as mqtt
 import sys
 import time
-from utils import list_to_string, string_to_list, print_update, BROKER_ADDRESS, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, YELLOW_ALERT_WAREHOUSE, RED_ALERT_WAREHOUSE, PARTS_TO_SEND_AMOUNT_WAREHOUSE
+from utils import list_to_string, string_to_list, print_update, BATCH_SIZE, TIME_SLEEP, DAYS_MAX, YELLOW_ALERT_WAREHOUSE, RED_ALERT_WAREHOUSE, PARTS_TO_SEND_AMOUNT_WAREHOUSE, broker_connection
+import os
 
 # BATCH_SIZE = 48
 # PARTS_THRESHOLD = BATCH_SIZE * 3
@@ -12,33 +13,13 @@ class Warehouse:
 
     def __init__(self):
         self.parts_buffer = [0] * 100
-        self.client = self.broker_connection()
+        _, self.client = broker_connection("warehouse", self.on_message)
         self.waitingOrder = False
         self.entity_name = 'warehouse'
 
-    def broker_connection(self):
+    def on_message(self, ch, method, properties, message):
 
-        # Configura o cliente MQTT
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.on_message = self.on_message
-
-        # Conecta ao broker MQTT (substitua com o endereço do seu broker)
-        client.connect(BROKER_ADDRESS)
-
-        # Mantém o cliente rodando
-        client.loop_start()
-
-        return client
-
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            print("client connected.")
-            client.subscribe("warehouse")
-
-    def on_message(self, client, userdata, message):
-
-        msg = str(message.payload.decode("utf-8"))
+        msg = message.decode()
 
         command = msg.split("/")
         print(command)
@@ -69,7 +50,7 @@ class Warehouse:
         
         result = "receive_parts" + "/" + line_id + "/" + factory_id + "/" + list_to_string(parts_to_send) 
         # print("enviando \n\n\n", list_to_string(parts_to_send))
-        self.client.publish("line", result)
+        self.client.basic_publish(exchange='', routing_key='line-' + str(line_id) + "-" + str(factory_id), body=result)
 
         self.decrement_parts(parts_index_sent)
 
@@ -118,8 +99,7 @@ class Warehouse:
         order = "send_parts" + "/" + order[:-1]
 
         # send order
-        self.client.publish("supplier", order)
-
+        self.client.basic_publish(exchange='', routing_key='supplier', body=order)
         self.waitingOrder = True
 
     def receive_part(self):
@@ -141,4 +121,12 @@ def main():
         time.sleep(TIME_SLEEP)
 
 if __name__ == '__main__':
+
+    time.sleep(3)
+
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+
     main()
