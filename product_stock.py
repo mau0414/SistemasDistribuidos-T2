@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import random
-from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, BATCH_SIZE, DAYS_MAX
+from utils import list_to_string, string_to_list, print_update, TIME_SLEEP, BATCH_SIZE, DAYS_MAX, RED_ALERT_PRODUCT_STOCK, MIN_ORDERED_AMOUNT, MAX_ORDERED_AMOUNT
 
 THRESHOLD = BATCH_SIZE
 NUM_PRODUCTS = 5
@@ -49,9 +49,9 @@ class ProductStock:
 
         status = 'GREEN'
         for i, product_amount in enumerate(self.products_buffer):
-            if product_amount < THRESHOLD:
+            if product_amount < RED_ALERT_PRODUCT_STOCK:
                 status = 'RED'
-            elif product_amount < THRESHOLD * 2:
+            elif product_amount < RED_ALERT_PRODUCT_STOCK * 2:
                 status = 'YELLOW'
         
         # print('products buffer on product stock:', self.products_buffer)
@@ -77,7 +77,7 @@ class ProductStock:
         products_sent = [0] * NUM_PRODUCTS
         for i in range(NUM_PRODUCTS):
                 
-            product_ordered_amount = random.randint(50, 150)
+            product_ordered_amount = random.randint(MIN_ORDERED_AMOUNT, MAX_ORDERED_AMOUNT)
             product_available = self.check_product(i, product_ordered_amount)
             if not product_available:
                 # print("order of product %d could not be done: lack of stock"  %(i + 1))
