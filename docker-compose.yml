@@ -32,6 +32,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - supplier
 
   factory_empurrada:
     build:
@@ -62,6 +63,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line10:
     build:
@@ -72,6 +74,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line20:
     build:
@@ -82,6 +85,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line30:
     build:
@@ -92,6 +96,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line40:
     build:
@@ -102,6 +107,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line01:
     build:
@@ -112,6 +118,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line11:
     build:
@@ -122,6 +129,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line21:
     build:
@@ -132,6 +140,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line31:
     build:
@@ -142,6 +151,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line41:
     build:
@@ -152,6 +162,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line51:
     build:
@@ -162,6 +173,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line61:
     build:
@@ -172,6 +184,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
 
   line71:
     build:
@@ -182,3 +195,4 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - warehouse
