@@ -196,3 +196,14 @@ services:
     depends_on:
       - rabbitmq
       - warehouse
+
+  # dashboard-productstock:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dashboard
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - rabbitmq
+  #     - productstock
+  #   command: ["python3", "dashboard.py", "topic"]

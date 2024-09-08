@@ -1,0 +1,12 @@
+FROM python
+
+WORKDIR /app
+
+COPY ["dashboard.py", "/app/"]
+
+RUN python -m pip install pika --upgrade
+RUN pip install matplotlib numpy
+
+
+# Defina o script de entrada padrão
+CMD ["python", "dashboard.py"]

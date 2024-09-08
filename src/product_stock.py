@@ -68,14 +68,16 @@ class ProductStock:
                 print_update('daily consume of product %s = %s' %(str(i + 1), str(product_ordered_amount)), self.entity_name)
                 products_sent[i] = product_ordered_amount
             
-        self.update_factory()
+        self.update_factory(products_sent)
         self.check_products()
 
-    def update_factory(self):
+    def update_factory(self, products_sent):
 
         message = "update_factory" + '/' +  list_to_string(self.products_buffer)
+        message_to_dashboard = 'product_stock/' + list_to_string(self.products_buffer) + '/' + list_to_string(products_sent)
         for i in range(FACTORY_N):
             self.client.basic_publish(exchange='', routing_key='factory-' + str(i) , body=message)
+        self.client.basic_publish(exchange='', routing_key='topic', body=message_to_dashboard)
 
 def main():
 
