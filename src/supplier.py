@@ -39,7 +39,7 @@ class Supplier:
 
 def main():
 
-    line = Supplier()
+    supplier = Supplier()
 
     days = 0
 
@@ -53,9 +53,9 @@ def main():
 if __name__ == '__main__':
     time.sleep(3)
 
-    if os.name == 'nt':
-        os.system('cls')
-    else:
-        os.system('clear')
+    # if os.name == 'nt':
+    #     os.system('cls')
+    # else:
+    #     os.system('clear')
 
     main()
