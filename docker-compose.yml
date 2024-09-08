@@ -1,0 +1,185 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    
+  supplier:
+    build:
+      context: .
+      dockerfile: Dockerfile.supplier
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  productstock:
+    build:
+      context: .
+      dockerfile: Dockerfile.productstock
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  warehouse:
+    build:
+      context: .
+      dockerfile: Dockerfile.warehouse
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  factory_empurrada:
+    build:
+      context: .
+      dockerfile: Dockerfile.factory
+    command: ["python3", "src/factory.py", "empurrada", "0", "5", "48"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  factory_puxada:
+    build:
+      context: .
+      dockerfile: Dockerfile.factory
+    command: ["python3", "src/factory.py", "puxada", "1", "8", "48"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line00:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "0", "0"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line10:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "1", "0"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line20:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "2", "0"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line30:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "3", "0"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line40:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "4", "0"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line01:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "0", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line11:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "1", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line21:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "2", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line31:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "3", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line41:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "4", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line51:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "5", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line61:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "6", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  line71:
+    build:
+      context: .
+      dockerfile: Dockerfile.line
+    command: ["python3", "src/line.py", "7", "1"]
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq

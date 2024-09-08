@@ -1,0 +1,10 @@
+FROM python
+
+WORKDIR /app
+
+COPY ["src", "/app/"]
+
+RUN python -m pip install pika --upgrade
+
+# Defina o script de entrada padrão
+CMD ["python", "src/supplier.py"]
