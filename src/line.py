@@ -32,7 +32,7 @@ class Line:
     def read_products_necessary_parts(self):
         
         necessary_parts = []
-        with open("products_and_parts.txt", 'r') as file:
+        with open("src/products_and_parts.txt", 'r') as file:
             
             for i in range(NUM_PRODUCTS):
                 products_parts = string_to_list(file.readline())

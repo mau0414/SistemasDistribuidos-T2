@@ -1,5 +1,6 @@
 import pika
 import threading
+import time
 
 '''
 
@@ -62,13 +63,23 @@ def print_update(msg, entity_name):
 
     print(msg)
 
-    with open('output/' + entity_name + '.txt', 'a') as file:
+    with open('src/output/' + entity_name + '.txt', 'a') as file:
         file.write(final_msg)
 
 def create_conn():
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=BROKER_ADDRESS))
-    channel = connection.channel()
+    parameters = pika.ConnectionParameters(
+        "rabbitmq",
+        5672,
+    )
+    while True:
+        try:
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            return channel
+        except pika.exceptions.AMQPConnectionError:
+            print("RabbitMQ not available yet, retrying in 5 seconds...")
+            time.sleep(5)
 
     return channel
 
